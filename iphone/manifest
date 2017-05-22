@@ -1,0 +1,18 @@
+#
+# this is your module manifest and used by Titanium
+# during compilation, packaging, distribution, etc.
+#
+version: 1.0.0
+apiversion: 2
+architectures: armv7 arm64 i386 x86_64
+description: titanium-deep-learning
+author: Hans Knoechel
+license: Specify your license
+copyright: Copyright (c) 2017 by Your Company
+
+# these should not be edited
+name: titanium-deep-learning
+moduleid: ti.deeplearning
+guid: 16ae195c-9c8b-4dbf-aaf7-6af9951bcd6f
+platform: iphone
+minsdk: 6.2.0

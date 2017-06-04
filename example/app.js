@@ -1,7 +1,7 @@
 var TiDeepLearning = require('ti.deeplearning');
 
 TiDeepLearning.initializeNetwork({
-	name: 'my_network' // Needs to be in your resources: `my_network.ntwk`
+	name: 'jetpac.ntwk' // Search and download from the DeepBelief SDK Github page
 });
 
 var win = Ti.UI.createWindow({
@@ -9,12 +9,14 @@ var win = Ti.UI.createWindow({
 });
 
 var btn = Ti.UI.createButton({
-    title: 'Trigger'
+    title: 'Compute image'
 });
 
 btn.addEventListener('click', function() {
     TiDeepLearning.classifyImage({
-		image: 'my_image.jpg',
+		image: 'macintosh.jpg',
+        minimumThreshold: 0.01,
+        decay: 0.75, 
 		callback: function(e) {
 			Ti.API.info(e.result);
 		}

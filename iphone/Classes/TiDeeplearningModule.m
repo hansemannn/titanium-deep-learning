@@ -10,6 +10,8 @@
 #import "TiHost.h"
 #import "TiUtils.h"
 
+#include <sys/time.h>
+
 @implementation TiDeeplearningModule
 
 #pragma mark Internal
@@ -59,6 +61,7 @@
     
     id image = [args objectForKey:@"image"];
     
+    // Process image
     if ([image isKindOfClass:[NSString class]]) {
         image = [TiUtils stringValue:image];
     } else if ([image isKindOfClass:[TiBlob class]]) {
@@ -67,10 +70,12 @@
     
     KrollCallback *callback = [args objectForKey:@"callback"];
 
+    // Define default values
     float minimumThreshold = [TiUtils floatValue:[args objectForKey:@"minimumThreshold"] def:0.01];
     float decay = [TiUtils floatValue:[args objectForKey:@"decay"] def:0.75];
     NSString *imagePath = [[NSBundle mainBundle] pathForResource:[image stringByDeletingPathExtension] ofType:[image pathExtension]];
-        
+    
+    // Put image in image-buffer
     void *inputImage = jpcnn_create_image_buffer_from_file([imagePath UTF8String]);
     
     if (inputImage == NULL) {
@@ -78,16 +83,29 @@
         return;
     }
     
+    // Prepare predictions
     float *predictions;
     int predictionsLength;
     char **predictionsLabels;
     int predictionsLabelsLength;
-    jpcnn_classify_image(network, inputImage, 0, 0, &predictions, &predictionsLength, &predictionsLabels, &predictionsLabelsLength);
     
+    // Measure time
+    struct timeval start;
+    struct timeval end;
+    
+    gettimeofday(&start, NULL);
+    jpcnn_classify_image(network, inputImage, 0, 0, &predictions, &predictionsLength, &predictionsLabels, &predictionsLabelsLength);
+    gettimeofday(&end, NULL);
+    
+    const long seconds  = end.tv_sec  - start.tv_sec;
+    const long useconds = end.tv_usec - start.tv_usec;
+    const float duration = ((seconds) * 1000 + useconds / 1000.0) + 0.5;
+
     jpcnn_destroy_image_buffer(inputImage);
     
     NSMutableArray *result = [NSMutableArray arrayWithCapacity:predictionsLength];
     
+    // Loop through results
     for (int index = 0; index < predictionsLength; index += 1) {
         const float predictionValue = predictions[index];
         const float decayedPredictionValue = (predictionValue * decay);
@@ -100,6 +118,6 @@
     
     jpcnn_destroy_network(network);
     
-    [callback call:@[@{@"success": NUMBOOL(YES), @"result": result}] thisObject:self];
+    [callback call:@[@{@"duration": NUMFLOAT(duration), @"success": NUMBOOL(YES), @"result": result}] thisObject:self];
 }
 @end

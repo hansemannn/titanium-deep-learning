@@ -42,14 +42,14 @@
     NSString* networkPath = [[NSBundle mainBundle] pathForResource:[filename stringByDeletingPathExtension] ofType:[filename pathExtension]];
     
     if (networkPath == nil) {
-        NSLog(@"[ERROR] Couldn't find the neural network parameters file \"%s.ntwk\", did you add it as a resource to your application?\n", filename.UTF8String);
+        NSLog(@"[ERROR] Couldn't find the neural network parameters file \"%s\", did you add it as a resource to your application?\n", filename.UTF8String);
         return;
     }
     
     network = jpcnn_create_network([networkPath UTF8String]);
 
     if (network == NULL) {
-        NSLog(@"[ERROR] Network could not be created, ensure the file exists and the file-structure matches the requirements.");
+        NSLog(@"[ERROR] Network could not be created, ensure the file exists and the file-structure matches the .ntwk requirements.");
     }
 }
 
@@ -57,12 +57,19 @@
 {
     ENSURE_SINGLE_ARG(args, NSDictionary);
     
-    NSString *image = [args objectForKey:@"image"];
+    id image = [args objectForKey:@"image"];
+    
+    if ([image isKindOfClass:[NSString class]]) {
+        image = [TiUtils stringValue:image];
+    } else if ([image isKindOfClass:[TiBlob class]]) {
+        image = [(TiBlob *)image path];
+    }
+    
     KrollCallback *callback = [args objectForKey:@"callback"];
 
     float minimumThreshold = [TiUtils floatValue:[args objectForKey:@"minimumThreshold"] def:0.01];
     float decay = [TiUtils floatValue:[args objectForKey:@"decay"] def:0.75];
-    NSString *imagePath = [[NSBundle mainBundle] pathForResource:[image stringByDeletingPathExtension] ofType:[image pathExtension]];
+    NSString *imagePath = [[TiUtils toURL:image proxy:self] absoluteString];
 
     void* inputImage = jpcnn_create_image_buffer_from_file([imagePath UTF8String]);
     

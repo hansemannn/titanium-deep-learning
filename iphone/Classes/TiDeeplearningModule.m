@@ -69,18 +69,18 @@
 
     float minimumThreshold = [TiUtils floatValue:[args objectForKey:@"minimumThreshold"] def:0.01];
     float decay = [TiUtils floatValue:[args objectForKey:@"decay"] def:0.75];
-    NSString *imagePath = [[TiUtils toURL:image proxy:self] absoluteString];
-
-    void* inputImage = jpcnn_create_image_buffer_from_file([imagePath UTF8String]);
+    NSString *imagePath = [[NSBundle mainBundle] pathForResource:[image stringByDeletingPathExtension] ofType:[image pathExtension]];
+        
+    void *inputImage = jpcnn_create_image_buffer_from_file([imagePath UTF8String]);
     
     if (inputImage == NULL) {
-        NSLog(@"[ERROR] Could not create image buffer. Ensure the image path is correct.");
+        [callback call:@[@{@"success": NUMBOOL(NO), @"error": @"Could not create image buffer. Ensure the image path is correct."}] thisObject:self];
         return;
     }
     
-    float* predictions;
+    float *predictions;
     int predictionsLength;
-    char** predictionsLabels;
+    char **predictionsLabels;
     int predictionsLabelsLength;
     jpcnn_classify_image(network, inputImage, 0, 0, &predictions, &predictionsLength, &predictionsLabels, &predictionsLabelsLength);
     
@@ -91,7 +91,7 @@
     for (int index = 0; index < predictionsLength; index += 1) {
         const float predictionValue = predictions[index];
         const float decayedPredictionValue = (predictionValue * decay);
-        char* label = predictionsLabels[index % predictionsLabelsLength];
+        char *label = predictionsLabels[index % predictionsLabelsLength];
 
         if (decayedPredictionValue > minimumThreshold) {
             [result addObject:@{@"label": [NSString stringWithFormat:@"%s", label], @"value": NUMFLOAT(predictionValue)}];
@@ -100,6 +100,6 @@
     
     jpcnn_destroy_network(network);
     
-    [callback call:@[@{@"result": result}] thisObject:self];
+    [callback call:@[@{@"success": NUMBOOL(YES), @"result": result}] thisObject:self];
 }
 @end

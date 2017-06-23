@@ -1,6 +1,8 @@
 # Titanium Deep-Learning
 Use the JetPac DeepBeliefSDK framework in Appcelerator Titanium.
 
+> **Note**: This module does not support apps running with app-thinning enabled so far. It will be part of upcoming versions and is scheduled already.
+
 ## Example
 ```js
 var TiDeepLearning = require('ti.deeplearning');
